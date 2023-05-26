@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -28,9 +29,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sharingwithcompose.navigation.Screens
-import com.example.sharingwithcompose.utils.name
+import com.example.sharingwithcompose.view.UserNameViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
@@ -40,75 +42,86 @@ import kotlinx.coroutines.delay
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun RegistrationScreen(navController: NavController) {
+    val userViewModel : UserNameViewModel = hiltViewModel<UserNameViewModel>()
+    val userName = userViewModel.userName.collectAsState()
 
-    var locationCallback: LocationCallback? = null
-    var fusedLocationClient: FusedLocationProviderClient? = null
-    var locationRequired = false
+    // check user name is null  or not
+    if (userName.value==null){
+        var locationCallback: LocationCallback? = null
+        var fusedLocationClient: FusedLocationProviderClient? = null
+        var locationRequired = false
 
-    var nam = remember {
-        mutableStateOf("")
-    }
-    val context = LocalContext.current
-    fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    locationCallback = object : LocationCallback() {
-        override fun onLocationResult(p0: LocationResult) {
-            for (lo in p0.locations) {
-                // Update UI with location data
-            }
+        var nam = remember {
+            mutableStateOf("")
         }
-    }
-
-    val launcherMultiplePermissions = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissionsMap ->
-        val areGranted = permissionsMap.values.reduce { acc, next -> acc && next }
-        if (areGranted) {
-            locationRequired = true
-            Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
-        } else {
-            Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
-        }
-    }
-    Column(modifier = Modifier.fillMaxSize()) {
-        val permissions = arrayOf(
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-        )
-        if (permissions.all {
-                ContextCompat.checkSelfPermission(
-                    context,
-                    it
-                ) != PackageManager.PERMISSION_GRANTED
-            }) {
-            LaunchedEffect(true) {
-                delay(2000)
-                launcherMultiplePermissions.launch(permissions)
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        Text(text = "Enter your name", modifier = Modifier.padding(start = 12.dp))
-        textField(nam = nam.value, hint = "User Name") {
-            nam.value = it
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-        Button(
-            onClick = {
-                if (nam.value.isNullOrEmpty()){
-                    Toast.makeText(context, "Please entre your name first", Toast.LENGTH_SHORT)
-                        .show()
-                }else {
-                    name = nam.value
-                    navController.navigate(Screens.typeScreen.route)
+        var USER_PREFERENCES_NAME = "Table_name"
+        val context = LocalContext.current
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        locationCallback = object : LocationCallback() {
+            override fun onLocationResult(p0: LocationResult) {
+                for (lo in p0.locations) {
+                    // Update UI with location data
                 }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            shape = RoundedCornerShape(8.dp),
-        ) {
-            Text(text = "Save")
+            }
+        }
+
+        val launcherMultiplePermissions = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissionsMap ->
+            val areGranted = permissionsMap.values.reduce { acc, next -> acc && next }
+            if (areGranted) {
+                locationRequired = true
+                Toast.makeText(context, "Permission Granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Permission Denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+        Column(modifier = Modifier.fillMaxSize()) {
+            val permissions = arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+            )
+            if (permissions.all {
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        it
+                    ) != PackageManager.PERMISSION_GRANTED
+                }) {
+                LaunchedEffect(true) {
+                    delay(2000)
+                    launcherMultiplePermissions.launch(permissions)
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text = "Enter your name", modifier = Modifier.padding(start = 12.dp))
+            textField(nam = nam.value, hint = "User Name") {
+                nam.value = it
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Button(
+                onClick = {
+                    if (nam.value.isNullOrEmpty()){
+                        Toast.makeText(context, "Please entre your name first", Toast.LENGTH_SHORT)
+                            .show()
+                    }else {
+                        userViewModel.saveData(name = nam.value)
+                        navController.navigate(Screens.typeScreen.route)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                shape = RoundedCornerShape(8.dp),
+            ) {
+                Text(text = "Save")
+            }
         }
     }
+    // redirect to type screen
+    else{
+        navController.navigate(Screens.typeScreen.route)
+    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

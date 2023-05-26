@@ -11,18 +11,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.sharingwithcompose.navigation.Screens
-import com.example.sharingwithcompose.utils.name
+import com.example.sharingwithcompose.view.UserNameViewModel
 
 @Composable
 fun TypeScreen(navController: NavController) {
+    val userViewModel = hiltViewModel<UserNameViewModel>()
+    val userName = userViewModel.userName.collectAsState()
+
     Column(modifier = Modifier.fillMaxSize()) {
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Hi ${name}", modifier = Modifier.padding(start = 12.dp))
+        Text(text = "Hi ${userName.value}", modifier = Modifier.padding(start = 12.dp))
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,

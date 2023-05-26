@@ -14,7 +14,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.sharingwithcompose.navigation.NavGraph
 import com.example.sharingwithcompose.ui.theme.SharingWithComposeTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     lateinit var navController : NavHostController
     override fun onCreate(savedInstanceState: Bundle?) {
